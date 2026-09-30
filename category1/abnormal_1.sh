@@ -1,0 +1,6 @@
+#!/usr/bin/env bash
+set -euo pipefail
+NS="${NS:-pbl-security}"; POD="$(kubectl -n "${NS}" get pod -l app=backend -o jsonpath='{.items[0].metadata.name}')"
+echo "[category1:abnormal_1] Attempting to read /etc/shadow."
+kubectl -n "${NS}" exec "${POD}" -- sh -c 'sleep 1; cat /etc/shadow >/dev/null; sleep 1'
+echo "Falco: kubectl logs -n falco -l app.kubernetes.io/name=falco -c falco --prefix --since=10m"

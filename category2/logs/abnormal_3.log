@@ -1,0 +1,1 @@
+Sep 30 13:27:01.101: pbl-security/frontend-example:52001 <> 10.96.137.243:22 (world) Policy denied DROPPED (TCP Flags: SYN)\nSep 30 13:27:02.202: pbl-security/frontend-example:52002 <> 10.96.61.197:3306 (world) Policy denied DROPPED (TCP Flags: SYN)\nSep 30 13:27:03.303: pbl-security/frontend-example:52003 <> 10.96.61.197:6379 (world) Policy denied DROPPED (TCP Flags: SYN)\n
