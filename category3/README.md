@@ -1,4 +1,5 @@
 # Category 3: Kubernetes Audit Log 확인
+**한국어** | [English](README_EN.md)
 
 정상 조회와 ServiceAccount 자격증명을 이용한 권한 없는 API 요청을 비교합니다.
 

@@ -1,4 +1,6 @@
 # 실무클라우드보안 PBL Project
+**한국어** | [English](README_EN.md)
+
 | 실습 | 관찰 도구 | 정상 행위 | 비정상 행위 |
 | --- | --- | --- | --- |
 | Category 1 | Falco | 설정·임시 파일·health check | shadow·token 접근, 셸 실행 |

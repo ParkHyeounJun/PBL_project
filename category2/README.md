@@ -1,4 +1,5 @@
 # Category 2: Hubble로 Pod 통신 확인
+**한국어** | [English](README_EN.md)
 
 허용된 서비스 경로와 내부 탐색·비정상 포트 연결 시도를 비교합니다.
 

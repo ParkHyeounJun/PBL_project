@@ -1,4 +1,5 @@
 # Category 1: Falco로 Pod 내부 행위 확인
+**한국어** | [English](README_EN.md)
 
 Pod 내부의 정상적인 파일·프로세스 활동과 민감 정보 접근 및 셸 실행을 비교합니다.
 
