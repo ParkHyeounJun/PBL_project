@@ -319,9 +319,9 @@ Useful commands:
   docker exec ${CLUSTER_NAME}-control-plane tail -f /var/log/kubernetes/audit.log
 
 Run labs:
-  cd ${ROOT_DIR}/category1 && ./normal.sh && ./abnormal.sh
-  cd ${ROOT_DIR}/category2 && ./normal.sh && ./abnormal.sh
-  cd ${ROOT_DIR}/category3 && ./normal.sh && ./abnormal.sh
+  cd ${ROOT_DIR} && ./category1/normal.sh && ./category1/abnormal_1.sh && ./category1/abnormal_2.sh && ./category1/abnormal_3.sh
+  cd ${ROOT_DIR} && ./category2/normal.sh && ./category2/abnormal_1.sh && ./category2/abnormal_2.sh && ./category2/abnormal_3.sh
+  cd ${ROOT_DIR} && ./category3/normal.sh && ./category3/abnormal_1.sh && ./category3/abnormal_2.sh && ./category3/abnormal_3.sh
 EOF
 }
 

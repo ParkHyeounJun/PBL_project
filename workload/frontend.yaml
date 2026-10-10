@@ -28,6 +28,24 @@ spec:
           env:
             - name: UPSTREAM_SERVICE
               value: http://backend.pbl-security.svc.cluster.local
+          readinessProbe:
+            httpGet:
+              path: /
+              port: 80
+            initialDelaySeconds: 1
+            periodSeconds: 2
+          livenessProbe:
+            httpGet:
+              path: /
+              port: 80
+            initialDelaySeconds: 5
+            periodSeconds: 10
+        - name: curl-client
+          image: curlimages/curl:8.11.1
+          imagePullPolicy: IfNotPresent
+          command: ["/bin/sh", "-c"]
+          args:
+            - sleep infinity
 ---
 apiVersion: v1
 kind: Service

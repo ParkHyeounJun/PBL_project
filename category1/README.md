@@ -1,44 +1,48 @@
-# Category 1: Falco로 Pod 내부 행위 확인
+# Category 1: OpenMetadata Attack (2024)
+
 **한국어** | [English](README_EN.md)
 
-Pod 내부의 정상적인 파일·프로세스 활동과 민감 정보 접근 및 셸 실행을 비교합니다.
+## 실제 사례
 
-## 로그 관찰
+2024년 공격자들은 OpenMetadata의 원격 코드 실행 취약점을 악용해 Kubernetes에서 실행 중인 애플리케이션 Pod에 진입했습니다. 침해 후 시스템과 환경을 정찰하고, 환경변수와 자격증명 파일을 탐색한 뒤 추가 payload와 shell을 실행하는 흐름이 관찰됐습니다. 실제 공격 흐름은 [Microsoft Threat Intelligence의 2024 분석](https://www.microsoft.com/en-us/security/blog/2024/04/17/attackers-exploiting-new-critical-openmetadata-vulnerabilities-on-kubernetes-clusters/)에서 확인할 수 있습니다.
 
-터미널 1에서 Falco 로그를 계속 관찰합니다.
+> 이 실습은 실제 악성코드나 외부 reverse shell을 재현하지 않습니다. Falco가 탐지할 수 있는 파일·프로세스 행위만 로컬에서 안전하게 단순화합니다.
+
+## 공격 행위 대응
+
+| 스크립트 | 실제 공격 단계 | 안전한 실습 행위 | Falco 구분값 |
+| --- | --- | --- | --- |
+| `normal.sh` | 정상 운영 기준선 | `sh`, `cat`, `curl`, 설정 읽기, `/tmp` 작업, health check | `scenario=normal` |
+| `abnormal_1.sh` | reconnaissance 및 credential discovery | 환경변수, `/proc/1/environ`, 일반 credential 경로 탐색 | `scenario=abnormal_1` |
+| `abnormal_2.sh` | Kubernetes credential access | 마운트된 ServiceAccount token 읽기 | `scenario=abnormal_2` |
+| `abnormal_3.sh` | payload 및 shell 실행 | 네트워크 연결 없는 로컬 payload marker 실행 | `scenario=abnormal_3` |
+
+## 실행 및 로그
+
+터미널 1:
 
 ```bash
 kubectl logs -n falco \
   -l app.kubernetes.io/name=falco \
-  -c falco --prefix --follow
+  -c falco --prefix --follow | grep --line-buffered PBL_EVENT
 ```
 
-터미널 2에서 프로젝트 루트로 이동해 원하는 시나리오를 실행합니다.
+터미널 2:
 
 ```bash
 cd pbl-project
-
 ./category1/normal.sh
 ./category1/abnormal_1.sh
 ./category1/abnormal_2.sh
 ./category1/abnormal_3.sh
 ```
 
-관찰을 끝낼 때는 터미널 1에서 `Ctrl+C`를 누릅니다.
-
-## 시나리오
-
-| 스크립트 | 행위 | 확인할 내용 |
-| --- | --- | --- |
-| `normal.sh` | 설정 파일 읽기, `/tmp` 파일 생성·수정, health check | 정상 파일·프로세스 활동 |
-| `abnormal_1.sh` | `/etc/shadow` 읽기 | `Sensitive file opened for reading` |
-| `abnormal_2.sh` | ServiceAccount token 읽기 | token 파일 경로와 `cat` 프로세스 |
-| `abnormal_3.sh` | 애플리케이션 Pod에서 TTY 셸 실행 | `A shell was spawned in a container` |
-
-최근 로그를 한 번에 다시 확인할 수 있습니다.
+최근 이벤트:
 
 ```bash
 kubectl logs -n falco \
   -l app.kubernetes.io/name=falco \
-  -c falco --prefix --since=10m
+  -c falco --prefix --since=10m | grep PBL_EVENT
 ```
+
+정상은 예상된 설정·임시 파일 활동이고, 비정상은 discovery, token read, payload execution으로 `action` 값이 달라집니다. 예시는 `logs/normal.log`, `logs/abnormal_1.log`부터 `abnormal_3.log`까지 확인합니다.

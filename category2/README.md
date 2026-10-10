@@ -1,48 +1,51 @@
-# Category 2: Hubble로 Pod 통신 확인
+# Category 2: Hildegard / TeamTNT (2021)
+
 **한국어** | [English](README_EN.md)
 
-허용된 서비스 경로와 내부 탐색·비정상 포트 연결 시도를 비교합니다.
+## 실제 사례
 
-## 로그 관찰
+Unit 42가 2021년 공개한 Hildegard 캠페인에서 TeamTNT는 익명 접근이 가능한 kubelet을 통해 명령을 실행하고, 내부 네트워크에서 kubelet과 컨테이너를 탐색한 뒤 다른 workload로 이동했습니다. masscan을 이용한 내부 스캔과 kubelet API 기반 lateral movement가 핵심이었습니다. 자세한 내용은 [Unit 42 Hildegard 분석](https://unit42.paloaltonetworks.com/hildegard-malware-teamtnt/)을 참고합니다.
 
-터미널 1에서 Hubble 연결을 열고 그대로 둡니다.
+> 이 실습은 masscan, 악성코드, miner, C2를 실행하지 않습니다. Hubble에서 탐지 가능한 목적지 수·포트 수·요청 빈도만 안전하게 단순화합니다.
+
+## 공격 행위 대응
+
+| 스크립트 | 실제 공격 단계 | 안전한 실습 행위 | Hubble 관찰점 |
+| --- | --- | --- | --- |
+| `normal.sh` | 정상 서비스 통신 | frontend→backend, backend→db, DNS, health check, retry를 3회 반복 | 소수의 고정 목적지, 80/53 포트, `FORWARDED` |
+| `abnormal_1.sh` | 평소 경로 밖 접근 | frontend에서 db Service 직접 접근 | 새로운 목적지, `DROPPED` |
+| `abnormal_2.sh` | workload discovery | 여러 Service와 Pod IP를 짧은 시간에 연속 탐색 | 목적지 fan-out과 빈도 증가 |
+| `abnormal_3.sh` | kubelet/서비스 probing | 여러 대상에 22, 443, 2379, 10250, 3306, 6379 연결 시도 | 목적지·포트 fan-out, 연속 `DROPPED` |
+
+## 실행 및 로그
+
+터미널 1:
 
 ```bash
-cd pbl-project
 cilium hubble port-forward
 ```
 
-터미널 2에서 모든 흐름을 관찰합니다.
+터미널 2:
 
 ```bash
 hubble observe --namespace pbl-security --follow --output compact
 ```
 
-터미널 3에서 프로젝트 루트로 이동해 원하는 시나리오를 실행합니다.
+터미널 3:
 
 ```bash
 cd pbl-project
-
 ./category2/normal.sh
 ./category2/abnormal_1.sh
 ./category2/abnormal_2.sh
 ./category2/abnormal_3.sh
 ```
 
-관찰을 끝낼 때는 터미널 1과 2에서 각각 `Ctrl+C`를 누릅니다.
-
-## 시나리오
-
-| 스크립트 | 행위 | 확인할 내용 |
-| --- | --- | --- |
-| `normal.sh` | frontend → backend, backend → db, health check와 DNS | `FORWARDED`, DNS query |
-| `abnormal_1.sh` | frontend → db 직접 접근 | `Blocked as expected.`, `DROPPED` |
-| `abnormal_2.sh` | 여러 내부 Pod·Service에 연속 접근 | 연속된 `FORWARDED`와 `DROPPED` |
-| `abnormal_3.sh` | 22, 3306, 6379 포트 연결 시도 | 여러 `Policy denied DROPPED` 흐름 |
-
-최근 차단 흐름만 다시 확인할 수 있습니다.
+차단 흐름만 확인:
 
 ```bash
 hubble observe --namespace pbl-security \
   --verdict DROPPED --since 10m --output compact
 ```
+
+예시는 `logs/normal.log`, `logs/abnormal_1.log`부터 `abnormal_3.log`까지 확인합니다.
